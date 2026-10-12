@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Malla Interactiva - Ingeniería Comercial</title>
   <style>
     :root {
@@ -91,6 +91,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
       transition: background 0.25s, color 0.25s;
       -webkit-tap-highlight-color: transparent;
@@ -110,13 +111,14 @@
     [data-theme="light"] .logo-dark-variant { display: none !important; }
     [data-theme="light"] .logo-light-variant { display: block !important; }
 
-    /* Splash Screen */
+    /* Splash Screen corregido con dvh */
     #splashScreen {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       background: #090d16;
       display: flex;
       flex-direction: column;
@@ -125,6 +127,7 @@
       z-index: 9999;
       opacity: 1;
       transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.7s;
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
     #splashScreen.fade-out {
@@ -209,7 +212,6 @@
       100% { width: 100%; }
     }
 
-    /* Header Adaptativo */
     header {
       padding: 10px 14px;
       background: var(--bg-header);
@@ -291,6 +293,7 @@
       flex: 1;
       overflow: auto;
       padding: 12px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
       display: flex;
       gap: 12px;
       transition: flex 0.25s ease;
@@ -469,7 +472,6 @@
     }
     #tooltip strong { color: var(--primary); }
 
-    /* Panel de Inspección Panel Lateral/Inferior */
     .inspector-panel {
       width: 320px;
       background: var(--panel-bg);
@@ -626,7 +628,6 @@
       margin-top: 2px;
     }
 
-    /* REGLAS MÓVILES (Celulares / Dispositivos táctiles pequeños) */
     @media (max-width: 768px) {
       header {
         flex-direction: column;
@@ -650,7 +651,6 @@
         min-width: 155px;
       }
 
-      /* Panel desplegable tipo Bottom Sheet en celular */
       .inspector-panel {
         position: fixed;
         bottom: 0;
@@ -663,6 +663,7 @@
         box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.5);
         z-index: 500;
         transform: translateY(0);
+        padding-bottom: calc(18px + env(safe-area-inset-bottom));
       }
 
       .inspector-panel.collapsed {
