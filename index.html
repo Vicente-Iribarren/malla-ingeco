@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Malla Interactiva - Ingeniería Comercial</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-header: #1e293b;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      
+      --blocked-bg: #182234;
+      --blocked-border: #283548;
+      --blocked-opacity: 0.45;
+      
+      --available-bg: #0c2d48;
+      --available-border: #0284c7;
+      --available-glow: rgba(2, 132, 199, 0.45);
+      
+      --passed-bg: #064e3b;
+      --passed-border: #059669;
+      --passed-glow: rgba(5, 150, 105, 0.35);
+
+      --convalidated-bg: #1e1b4b;
+      --convalidated-border: #6366f1;
+      --convalidated-glow: rgba(99, 102, 241, 0.35);
+
+      --failed-bg: #450a0a;
+      --failed-border: #dc2626;
+      --failed-glow: rgba(220, 38, 38, 0.4);
+
+      --unlock-glow: #22c55e;
+      --missing-req: #ef4444;
+      --panel-bg: #111827;
+      --item-bg: #1f2937;
+      --tooltip-bg: #030712;
+    }
+
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --bg-header: #ffffff;
+      --card-bg: #ffffff;
+      --card-border: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #0284c7;
+      
+      --blocked-bg: #f1f5f9;
+      --blocked-border: #cbd5e1;
+      --blocked-opacity: 0.55;
+      
+      --available-bg: #e0f2fe;
+      --available-border: #0284c7;
+      --available-glow: rgba(2, 132, 199, 0.25);
+      
+      --passed-bg: #d1fae5;
+      --passed-border: #10b981;
+      --passed-glow: rgba(16, 185, 129, 0.25);
+
+      --convalidated-bg: #ede9fe;
+      --convalidated-border: #6366f1;
+      --convalidated-glow: rgba(99, 102, 241, 0.25);
+
+      --failed-bg: #fee2e2;
+      --failed-border: #ef4444;
+      --failed-glow: rgba(239, 68, 68, 0.25);
+
+      --unlock-glow: #16a34a;
+      --missing-req: #dc2626;
+      --panel-bg: #ffffff;
+      --item-bg: #f8fafc;
+      --tooltip-bg: #1e293b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      transition: background 0.25s, color 0.25s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    header {
+      padding: 10px 18px;
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+      gap: 10px;
+    }
+
+    .title-box h1 { font-size: 1.05rem; font-weight: 700; }
+    .title-box p { font-size: 0.72rem; color: var(--text-muted); }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .progress-box {
+      font-size: 0.72rem;
+      text-align: right;
+    }
+    .progress-bar {
+      width: 110px;
+      height: 6px;
+      background: var(--card-border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #10b981;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .btn-action, .theme-toggle {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      touch-action: manipulation;
+    }
+    .btn-action:hover, .theme-toggle:hover { border-color: var(--primary); }
+
+    .main-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .grid-container {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+      display: flex;
+      gap: 14px;
+      transition: flex 0.25s ease;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .semestre-col {
+      min-width: 185px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .semestre-header {
+      padding: 8px 6px;
+      background: var(--card-bg);
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .semestre-header .sem-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1.2;
+    }
+    .semestre-header .sem-level {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+    .btn-sem-toggle {
+      margin-top: 2px;
+      background: var(--item-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 6px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      touch-action: manipulation;
+    }
+    .btn-sem-toggle:hover {
+      border-color: var(--primary);
+      background: var(--card-border);
+    }
+
+    .course-card {
+      border: 2px solid var(--card-border);
+      border-radius: 8px;
+      padding: 10px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      min-height: 90px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .course-card.status-blocked {
+      background: var(--blocked-bg);
+      border-color: var(--blocked-border);
+      opacity: var(--blocked-opacity);
+    }
+
+    .course-card.status-available {
+      background: var(--available-bg);
+      border-color: var(--available-border);
+      box-shadow: 0 0 10px var(--available-glow);
+    }
+
+    .course-card.status-passed {
+      background: var(--passed-bg);
+      border-color: var(--passed-border);
+      box-shadow: 0 0 8px var(--passed-glow);
+    }
+    .course-card.status-passed::after {
+      content: "✓ Aprobado";
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #10b981;
+    }
+
+    .course-card.status-convalidated {
+      background: var(--convalidated-bg) !important;
+      border-color: var(--convalidated-border) !important;
+      box-shadow: 0 0 8px var(--convalidated-glow) !important;
+      opacity: 1 !important;
+    }
+    .course-card.status-convalidated::after {
+      content: "★ Convalidado";
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #818cf8;
+    }
+
+    .course-card.status-failed {
+      background: var(--failed-bg) !important;
+      border-color: var(--failed-border) !important;
+      box-shadow: 0 0 10px var(--failed-glow) !important;
+      opacity: 1 !important;
+    }
+    .course-card.status-failed::after {
+      content: "✕ Reprobado";
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #ef4444;
+    }
+
+    .level-tag {
+      position: absolute;
+      bottom: 6px;
+      left: 8px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      background: #475569;
+      color: #fff;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    .course-card.selected {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      transform: scale(1.02);
+      z-index: 10;
+    }
+    .course-card.highlight-unlock {
+      box-shadow: 0 0 14px var(--unlock-glow) !important;
+      border-color: var(--unlock-glow) !important;
+    }
+
+    .course-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      line-height: 1.25;
+      margin-bottom: 4px;
+    }
+    .course-code {
+      font-size: 0.63rem;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+    .course-sct {
+      font-size: 0.63rem;
+      font-weight: 700;
+      color: var(--primary);
+      align-self: flex-end;
+    }
+
+    #tooltip {
+      position: fixed;
+      pointer-events: none !important;
+      background: var(--tooltip-bg);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      z-index: 1000;
+      display: none;
+      max-width: 250px;
+      line-height: 1.35;
+    }
+    #tooltip strong { color: var(--primary); }
+
+    .inspector-panel {
+      width: 330px;
+      background: var(--panel-bg);
+      border-left: 1px solid var(--card-border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      flex-shrink: 0;
+      transition: width 0.25s ease, padding 0.25s ease, opacity 0.2s ease, transform 0.25s ease;
+      position: relative;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .inspector-panel.collapsed {
+      width: 0 !important;
+      padding: 0 !important;
+      border-left: none !important;
+      opacity: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-available { background: #0284c7; color: #fff; }
+    .badge-blocked { background: #64748b; color: #fff; }
+    .badge-passed { background: #059669; color: #fff; }
+    .badge-convalidated { background: #4f46e5; color: #fff; }
+    .badge-failed { background: #dc2626; color: #fff; }
+
+    .action-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .btn-status {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter 0.2s;
+      touch-action: manipulation;
+    }
+    .btn-status:hover { filter: brightness(1.15); }
+    .btn-pass { background: #10b981; color: white; }
+    .btn-fail { background: #ef4444; color: white; }
+    .btn-reset-course {
+      grid-column: span 2;
+      background: var(--item-bg);
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+    }
+
+    .convalidation-box {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px dashed #6366f1;
+      padding: 12px;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .convalidation-box p {
+      font-size: 0.72rem;
+      line-height: 1.35;
+      color: var(--text);
+    }
+    .btn-convalidate {
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      touch-action: manipulation;
+    }
+    .btn-convalidate:hover { background: #4338ca; }
+
+    .inspector-section h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
+    .item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .list-item {
+      font-size: 0.75rem;
+      padding: 8px 10px;
+      background: var(--item-bg);
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .list-item:hover { border-color: var(--primary); }
+    .list-item.ok { border-left: 3px solid #10b981; }
+    .list-item.missing { border-left: 3px solid var(--missing-req); color: #ef4444; }
+
+    .alert-box {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .footer-credits {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--card-border);
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .footer-credits .univ {
+      display: block;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    @media (max-width: 900px) and (orientation: portrait) {
+      .main-layout {
+        flex-direction: column;
+      }
+      .inspector-panel {
+        width: 100% !important;
+        max-height: 40vh;
+        border-left: none;
+        border-top: 1px solid var(--card-border);
+        box-shadow: 0 -4px 14px rgba(0,0,0,0.3);
+      }
+      .inspector-panel.collapsed {
+        height: 0 !important;
+        max-height: 0 !important;
+        padding: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <header>
+    <div class="title-box">
+      <h1>Malla Curricular Dinámica — Ing. Comercial</h1>
+      <p>Toca para seleccionar o aprobar. Mantén presionado 0.5s para ver requisitos.</p>
+    </div>
+
+    <div class="header-controls">
+      <div class="progress-box">
+        <span id="progressText">0 / 58 Aprobados (0%)</span>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+
+      <button class="btn-action" onclick="resetAll()">↺ Reiniciar</button>
+      <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()">☀️ Modo Claro</button>
+      <button class="btn-action" id="sidebarToggleBtn" onclick="toggleSidebar()">⮞ Ocultar Panel</button>
+    </div>
+  </header>
+
+  <div class="main-layout">
+    <div class="grid-container" id="gridContainer"></div>
+
+    <aside class="inspector-panel" id="inspectorPanel">
+      <div style="text-align: center; color: var(--text-muted); margin-top: 40px;">
+        Toca cualquier asignatura para ver sus requisitos, detalles y cambiar su estado.
+      </div>
+      <div class="footer-credits">
+        Creado por el Centro de Estudiantes de Ingeniería Comercial 2026
+        <span class="univ">Universidad de Atacama</span>
+      </div>
+    </aside>
+  </div>
+
+  <div id="tooltip"></div>
+
+  <script>
+    const semToLevel = {
+      1: "101", 2: "102", 3: "201", 4: "202", 5: "301",
+      6: "302", 7: "401", 8: "402", 9: "501", 10: "502"
+    };
+    const levelToMaxSem = {
+      "101": 1, "102": 2, "201": 3, "202": 4, "301": 5,
+      "302": 6, "401": 7, "402": 8, "501": 9, "502": 10
+    };
+
+    const courses = [
+      // Semestre 1 (Nivel 101)
+      { id: "ALG1", name: "Álgebra I", code: "IC11115", sem: 1, sct: 6, reqs: [] },
+      { id: "CAL1", name: "Cálculo I", code: "IC11215", sem: 1, sct: 5, reqs: [] },
+      { id: "INT_ECO", name: "Introducción a la Economía", code: "IC11315", sem: 1, sct: 5, reqs: [] },
+      { id: "CONT_BAS", name: "Contabilidad Básica", code: "IC11415", sem: 1, sct: 5, reqs: [] },
+      { id: "ADM1", name: "Administración I", code: "IC11515", sem: 1, sct: 5, reqs: [] },
+      { id: "MET_APR", name: "Mét. Para el Aprend. Autó.", code: "IC11615", sem: 1, sct: 4, reqs: [] },
+
+      // Semestre 2 (Nivel 102)
+      { id: "ALG2", name: "Álgebra II", code: "IC12115", sem: 2, sct: 6, reqs: ["ALG1"] },
+      { id: "CAL2", name: "Cálculo II", code: "IC12215", sem: 2, sct: 6, reqs: ["CAL1"] },
+      { id: "MIC1", name: "Microeconomía I", code: "IC12315", sem: 2, sct: 5, reqs: ["CAL1", "INT_ECO"] },
+      { id: "CONT_AV", name: "Contabilidad Avanzada", code: "IC12415", sem: 2, sct: 5, reqs: ["CONT_BAS"] },
+      { id: "ADM2", name: "Administración II", code: "IC12515", sem: 2, sct: 4, reqs: ["ADM1"] },
+      { id: "TAL_PROG", name: "Taller de Programación", code: "IC12615", sem: 2, sct: 4, reqs: [] },
+
+      // Semestre 3 (Nivel 201)
+      { id: "TEC_COM", name: "Técnicas de la Comunicación", code: "IC21115", sem: 3, sct: 4, reqs: [] },
+      { id: "EST1", name: "Estadística", code: "IC21215", sem: 3, sct: 6, reqs: ["CAL2"] },
+      { id: "MAC1", name: "Macroeconomía I", code: "IC21315", sem: 3, sct: 6, reqs: ["CAL1", "INT_ECO"] },
+      { id: "CONT_COS", name: "Contabilidad de Costos", code: "IC21415", sem: 3, sct: 6, reqs: ["CONT_AV"] },
+      { id: "MET_INV", name: "Metodología de la Investigación", code: "IC21515", sem: 3, sct: 4, reqs: [] },
+      { id: "SIST_INF", name: "Sist. De Inform. Adm.", code: "IC21615", sem: 3, sct: 4, reqs: ["TAL_PROG"] },
+
+      // Semestre 4 (Nivel 202)
+      { id: "INV_OP", name: "Investigación Operativa", code: "IC22115", sem: 4, sct: 6, reqs: ["ALG2"] },
+      { id: "EST_EMP", name: "Estadística Empresarial", code: "IC22215", sem: 4, sct: 7, reqs: ["EST1"] },
+      { id: "MIC2", name: "Microeconomía II", code: "IC22315", sem: 4, sct: 6, reqs: ["MIC1"] },
+      { id: "TAL_REL", name: "Taller de Rel. Interpersonal", code: "IC22415", sem: 4, sct: 3, reqs: [] },
+      { id: "ING1", name: "Inglés I", code: "IC22515", sem: 4, sct: 4, reqs: [] },
+      { id: "TIC", name: "TIC", code: "IC22615", sem: 4, sct: 4, reqs: ["SIST_INF"] },
+
+      // Semestre 5 (Nivel 301)
+      { id: "LEG_LAB", name: "Legislación Laboral", code: "IC31115", sem: 5, sct: 4, reqs: [], reqLevel: "201" },
+      { id: "ECONOM", name: "Econometría", code: "IC31215", sem: 5, sct: 6, reqs: ["EST_EMP"] },
+      { id: "MAC2", name: "Macroeconomía II", code: "IC31315", sem: 5, sct: 6, reqs: ["MAC1"] },
+      { id: "CTRL_GES", name: "Control de Gestión", code: "IC31415", sem: 5, sct: 6, reqs: ["CONT_COS"] },
+      { id: "ING2", name: "Inglés II", code: "IC31515", sem: 5, sct: 4, reqs: ["ING1"] },
+      { id: "DER_COM", name: "Derecho Comercial", code: "IC31615", sem: 5, sct: 4, reqs: [], reqLevel: "201" },
+
+      // Semestre 6 (Nivel 302)
+      { id: "GES_PER", name: "Gestión de Personas", code: "IC32115", sem: 6, sct: 5, reqs: ["LEG_LAB"] },
+      { id: "GES_OP", name: "Gestión de Operaciones", code: "IC32215", sem: 6, sct: 7, reqs: ["INV_OP"] },
+      { id: "MKT1", name: "Marketing I", code: "IC32315", sem: 6, sct: 3, reqs: [] },
+      { id: "FIN_CORP1", name: "Finanzas Corporativas I", code: "IC32415", sem: 6, sct: 7, reqs: ["CTRL_GES"] },
+      { id: "ING3", name: "Inglés III", code: "IC32515", sem: 6, sct: 4, reqs: ["ING2"] },
+      { id: "LEG_TRIB", name: "Legislación Tributaria", code: "IC32615", sem: 6, sct: 4, reqs: ["DER_COM"] },
+
+      // Semestre 7 (Nivel 401)
+      { id: "COMP_ORG", name: "Comportamiento Organizacional", code: "IC41115", sem: 7, sct: 4, reqs: ["GES_PER"] },
+      { id: "LOG_EMP", name: "Logística Empresarial", code: "IC41215", sem: 7, sct: 5, reqs: ["GES_OP"] },
+      { id: "GES_EST", name: "Gestión Estratégica", code: "IC41315", sem: 7, sct: 5, reqs: ["MKT1"] },
+      { id: "FIN_CORP2", name: "Finanzas Corporativas II", code: "IC41415", sem: 7, sct: 7, reqs: ["FIN_CORP1"] },
+      { id: "ING4", name: "Inglés IV", code: "IC41515", sem: 7, sct: 4, reqs: ["ING3"] },
+      { id: "INV_MERC", name: "Investigación de Mercado", code: "IC41615", sem: 7, sct: 5, reqs: ["MKT1"] },
+      { id: "PRAC_FORM", name: "Práctica Formativa", code: "IC41715", sem: 7, sct: 3, reqs: [], reqLevel: "302" },
+
+      // Semestre 8 (Nivel 402)
+      { id: "DES_ORG", name: "Desarrollo Organizacional", code: "IC42115", sem: 8, sct: 7, reqs: ["COMP_ORG"] },
+      { id: "TAL_INN", name: "Taller de Innovación y Empr.", code: "IC42215", sem: 8, sct: 6, reqs: ["LOG_EMP"], reqLevel: "302" },
+      { id: "OPT1", name: "Optativo 1", code: "IC42315", sem: 8, sct: 3, reqs: [] },
+      { id: "ELEC1", name: "Electivo 1", code: "IC42415", sem: 8, sct: 3, reqs: [], reqLevel: "302" },
+      { id: "ING5", name: "Inglés V", code: "IC42515", sem: 8, sct: 4, reqs: ["ING4"] },
+      { id: "MKT2", name: "Marketing II", code: "IC42615", sem: 8, sct: 7, reqs: ["INV_MERC"] },
+
+      // Semestre 9 (Nivel 501)
+      { id: "TRAB_TIT1", name: "Trabajo de Titulación I", code: "IC51115", sem: 9, sct: 13, reqs: ["DES_ORG"], reqLevel: "401" },
+      { id: "ELEC2", name: "Electivo 2", code: "IC51215", sem: 9, sct: 3, reqs: [], reqLevel: "302" },
+      { id: "PREP_EVAL", name: "Prep. y Ev. de Proyectos", code: "IC51315", sem: 9, sct: 8, reqs: ["OPT1"], reqLevel: "402" },
+      { id: "ETICA", name: "Ética y Moral Profesional", code: "IC51415", sem: 9, sct: 3, reqs: [], reqLevel: "302" },
+      { id: "ING6", name: "Inglés VI", code: "IC51515", sem: 9, sct: 4, reqs: ["ING5"] },
+      { id: "PRAC_PROF", name: "Práctica Profesional", code: "IC51615", sem: 9, sct: 4, reqs: ["PRAC_FORM"], reqLevel: "402" },
+
+      // Semestre 10 (Nivel 502)
+      { id: "TRAB_TIT2", name: "Trabajo de Titulación II", code: "IC52115", sem: 10, sct: 21, reqs: ["TRAB_TIT1"], reqLevel: "501" },
+      { id: "OPT2", name: "Optativo 2", code: "IC52215", sem: 10, sct: 3, reqs: [] },
+      { id: "ELEC3", name: "Electivo 3", code: "IC52315", sem: 10, sct: 3, reqs: [], reqLevel: "302" },
+      { id: "RSE", name: "RSE", code: "IC52415", sem: 10, sct: 3, reqs: ["ETICA"], reqLevel: "402" }
+    ];
+
+    let courseStatusMap = JSON.parse(localStorage.getItem('malla_statuses') || '{}');
+    let selectedCourseId = null;
+
+    const unlockMap = {};
+    courses.forEach(c => unlockMap[c.id] = []);
+    courses.forEach(c => {
+      c.reqs.forEach(reqId => {
+        if (unlockMap[reqId]) unlockMap[reqId].push(c.id);
+      });
+    });
+
+    const gridContainer = document.getElementById('gridContainer');
+    const inspectorPanel = document.getElementById('inspectorPanel');
+    const tooltip = document.getElementById('tooltip');
+
+    function isPassedOrConvalidated(id) {
+      const state = courseStatusMap[id];
+      return state === 'passed' || state === 'convalidated';
+    }
+
+    function checkCourse(course) {
+      const state = courseStatusMap[course.id];
+      const isPassed = state === 'passed';
+      const isConvalidated = state === 'convalidated';
+      const isFailed = state === 'failed';
+
+      const missingDirect = course.reqs.filter(r => !isPassedOrConvalidated(r));
+      
+      let missingFromLevel = [];
+      if (course.reqLevel) {
+        const maxSem = levelToMaxSem[course.reqLevel];
+        const levelCourses = courses.filter(c => c.sem <= maxSem);
+        missingFromLevel = levelCourses.filter(c => !isPassedOrConvalidated(c.id));
+      }
+
+      const isAvailable = !isPassed && !isConvalidated && !isFailed && missingDirect.length === 0 && missingFromLevel.length === 0;
+
+      return { isPassed, isConvalidated, isFailed, isAvailable, missingDirect, missingFromLevel };
+    }
+
+    function enforceCascade() {
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const c of courses) {
+          if (courseStatusMap[c.id] === 'passed') {
+            const hasMissingDirect = c.reqs.some(r => !isPassedOrConvalidated(r));
+            let hasMissingLevel = false;
+            if (c.reqLevel) {
+              const maxSem = levelToMaxSem[c.reqLevel];
+              hasMissingLevel = courses.filter(x => x.sem <= maxSem).some(x => !isPassedOrConvalidated(x.id));
+            }
+
+            if (hasMissingDirect || hasMissingLevel) {
+              delete courseStatusMap[c.id];
+              changed = true;
+            }
+          }
+        }
+      }
+    }
+
+    function toggleSemester(semNumber) {
+      const thisSemCourses = courses.filter(c => c.sem === semNumber);
+      const isThisSemPassed = thisSemCourses.every(c => isPassedOrConvalidated(c.id));
+
+      if (isThisSemPassed) {
+        thisSemCourses.forEach(c => delete courseStatusMap[c.id]);
+        enforceCascade();
+      } else {
+        for (let s = 1; s <= semNumber; s++) {
+          const sCourses = courses.filter(c => c.sem === s);
+          sCourses.forEach(c => {
+            if (courseStatusMap[c.id] !== 'convalidated') {
+              courseStatusMap[c.id] = 'passed';
+            }
+          });
+        }
+        enforceCascade();
+      }
+
+      localStorage.setItem('malla_statuses', JSON.stringify(courseStatusMap));
+      updateAll();
+    }
+
+    function toggleSidebar() {
+      const isCollapsed = inspectorPanel.classList.toggle('collapsed');
+      const btn = document.getElementById('sidebarToggleBtn');
+      btn.innerText = isCollapsed ? '⮜ Mostrar Panel' : '⮞ Ocultar Panel';
+      localStorage.setItem('malla_sidebar_collapsed', isCollapsed);
+    }
+
+    function renderGrid() {
+      gridContainer.innerHTML = '';
+      for (let s = 1; s <= 10; s++) {
+        const col = document.createElement('div');
+        col.className = 'semestre-col';
+        
+        const header = document.createElement('div');
+        header.className = 'semestre-header';
+        header.id = `sem-header-${s}`;
+        header.innerHTML = `
+          <span class="sem-title">Semestre ${s}</span>
+          <span class="sem-level">Nivel ${semToLevel[s]}</span>
+          <button class="btn-sem-toggle" onclick="toggleSemester(${s})">Aprobar Semestre</button>
+        `;
+        col.appendChild(header);
+
+        const sCourses = courses.filter(c => c.sem === s);
+        sCourses.forEach(c => {
+          const card = document.createElement('div');
+          card.className = 'course-card';
+          card.id = `card-${c.id}`;
+          
+          let levelTag = c.reqLevel ? `<span class="level-tag">Req: Niv. ${c.reqLevel}</span>` : '';
+
+          card.innerHTML = `
+            <div>
+              <div class="course-title">${c.name}</div>
+              <div class="course-code">${c.code}</div>
+            </div>
+            ${levelTag}
+            <div class="course-sct">${c.sct} SCT</div>
+          `;
+
+          let touchTimer = null;
+          let isLongPress = false;
+
+          card.addEventListener('touchstart', (e) => {
+            isLongPress = false;
+            touchTimer = setTimeout(() => {
+              isLongPress = true;
+              showTooltipTouch(e.touches[0], c);
+            }, 450);
+          }, { passive: true });
+
+          card.addEventListener('touchend', () => {
+            clearTimeout(touchTimer);
+            if (isLongPress) {
+              setTimeout(hideTooltip, 2000);
+            }
+          });
+
+          card.addEventListener('touchmove', () => {
+            clearTimeout(touchTimer);
+          });
+
+          card.addEventListener('click', (e) => {
+            if (isLongPress) return;
+            if (e.altKey) {
+              selectCourse(c.id);
+            } else {
+              cycleStatus(c.id);
+            }
+          });
+
+          card.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            selectCourse(c.id);
+          });
+
+          card.addEventListener('mouseenter', (e) => showTooltip(e, c));
+          card.addEventListener('mousemove', (e) => moveTooltip(e));
+          card.addEventListener('mouseleave', hideTooltip);
+
+          col.appendChild(card);
+        });
+        gridContainer.appendChild(col);
+      }
+      updateAll();
+    }
+
+    function showTooltip(e, c) {
+      let reqNames = c.reqs.map(rid => {
+        const found = courses.find(x => x.id === rid);
+        return found ? found.name : rid;
+      });
+
+      let content = `<strong>${c.name}</strong><br>`;
+      if (reqNames.length > 0) {
+        content += `📌 <strong>Requiere:</strong> ${reqNames.join(', ')}<br>`;
+      } else {
+        content += `📌 <strong>Requiere:</strong> Sin prerrequisitos específicos<br>`;
+      }
+
+      if (c.reqLevel) {
+        content += `🎓 <strong>Nivel:</strong> ${c.reqLevel} completo (Sem. 1 al ${levelToMaxSem[c.reqLevel]})`;
+      }
+
+      tooltip.innerHTML = content;
+      tooltip.style.display = 'block';
+      moveTooltip(e);
+    }
+
+    function showTooltipTouch(touch, c) {
+      showTooltip({ clientX: touch.clientX, clientY: touch.clientY }, c);
+    }
+
+    function moveTooltip(e) {
+      const offset = 14;
+      tooltip.style.left = `${e.clientX + offset}px`;
+      tooltip.style.top = `${e.clientY + offset}px`;
+    }
+
+    function hideTooltip() {
+      tooltip.style.display = 'none';
+    }
+
+    function cycleStatus(id) {
+      const current = courseStatusMap[id];
+      if (!current) {
+        const course = courses.find(x => x.id === id);
+        const directOk = course.reqs.every(r => isPassedOrConvalidated(r));
+        let levelOk = true;
+        if (course.reqLevel) {
+          const maxSem = levelToMaxSem[course.reqLevel];
+          levelOk = courses.filter(x => x.sem <= maxSem).every(x => isPassedOrConvalidated(x.id));
+        }
+
+        if (directOk && levelOk) {
+          courseStatusMap[id] = 'passed';
+        } else {
+          selectCourse(id);
+          if (inspectorPanel.classList.contains('collapsed')) {
+            toggleSidebar();
+          }
+          return;
+        }
+      } else if (current === 'passed' || current === 'convalidated') {
+        courseStatusMap[id] = 'failed';
+        enforceCascade();
+      } else {
+        delete courseStatusMap[id];
+        enforceCascade();
+      }
+      saveAndSync(id);
+    }
+
+    function setStatus(id, newStatus) {
+      if (newStatus === 'passed') {
+        const course = courses.find(x => x.id === id);
+        const directOk = course.reqs.every(r => isPassedOrConvalidated(r));
+        let levelOk = true;
+        if (course.reqLevel) {
+          const maxSem = levelToMaxSem[course.reqLevel];
+          levelOk = courses.filter(x => x.sem <= maxSem).every(x => isPassedOrConvalidated(x.id));
+        }
+        if (!directOk || !levelOk) {
+          alert('No puedes marcar esta asignatura como aprobada por la vía regular porque aún tiene prerrequisitos o niveles pendientes. Si vienes de cambio de carrera, usa la opción de convalidar.');
+          return;
+        }
+        courseStatusMap[id] = 'passed';
+      } else if (newStatus === 'convalidated') {
+        courseStatusMap[id] = 'convalidated';
+      } else if (newStatus === 'failed') {
+        courseStatusMap[id] = 'failed';
+        enforceCascade();
+      } else {
+        delete courseStatusMap[id];
+        enforceCascade();
+      }
+      saveAndSync(id);
+    }
+
+    function saveAndSync(id) {
+      localStorage.setItem('malla_statuses', JSON.stringify(courseStatusMap));
+      selectedCourseId = id;
+      updateAll();
+    }
+
+    function selectCourse(id) {
+      selectedCourseId = id;
+      updateAll();
+    }
+
+    function updateAll() {
+      let passedCount = 0;
+
+      courses.forEach(c => {
+        const card = document.getElementById(`card-${c.id}`);
+        if (!card) return;
+
+        card.className = 'course-card';
+        const st = checkCourse(c);
+
+        if (st.isPassed) {
+          card.classList.add('status-passed');
+          passedCount++;
+        } else if (st.isConvalidated) {
+          card.classList.add('status-convalidated');
+          passedCount++;
+        } else if (st.isFailed) {
+          card.classList.add('status-failed');
+        } else if (st.isAvailable) {
+          card.classList.add('status-available');
+        } else {
+          card.classList.add('status-blocked');
+        }
+
+        if (c.id === selectedCourseId) {
+          card.classList.add('selected');
+        }
+      });
+
+      for (let s = 1; s <= 10; s++) {
+        const headerBtn = document.querySelector(`#sem-header-${s} .btn-sem-toggle`);
+        if (headerBtn) {
+          const semCourses = courses.filter(c => c.sem === s);
+          const allPassed = semCourses.every(c => isPassedOrConvalidated(c.id));
+          headerBtn.innerText = allPassed ? "Desmarcar Semestre" : `Aprobar hasta Sem. ${s}`;
+          headerBtn.style.color = allPassed ? "var(--missing-req)" : "var(--text)";
+        }
+      }
+
+      if (selectedCourseId) {
+        const unlocks = unlockMap[selectedCourseId] || [];
+        unlocks.forEach(uid => {
+          const uCard = document.getElementById(`card-${uid}`);
+          if (uCard) uCard.classList.add('highlight-unlock');
+        });
+      }
+
+      const total = courses.length;
+      const pct = Math.round((passedCount / total) * 100);
+      document.getElementById('progressText').innerText = `${passedCount} / ${total} Aprobados (${pct}%)`;
+      document.getElementById('progressFill').style.width = `${pct}%`;
+
+      renderInspector();
+    }
+
+    function renderInspector() {
+      if (!selectedCourseId) return;
+
+      const c = courses.find(c => c.id === selectedCourseId);
+      const st = checkCourse(c);
+      const unlocks = unlockMap[c.id].map(uid => courses.find(i => i.id === uid));
+
+      let badgeHTML = '';
+      if (st.isPassed) {
+        badgeHTML = `<span class="badge badge-passed">Aprobado</span>`;
+      } else if (st.isConvalidated) {
+        badgeHTML = `<span class="badge badge-convalidated">Convalidado</span>`;
+      } else if (st.isFailed) {
+        badgeHTML = `<span class="badge badge-failed">Reprobado</span>`;
+      } else if (st.isAvailable) {
+        badgeHTML = `<span class="badge badge-available">Disponible</span>`;
+      } else {
+        badgeHTML = `<span class="badge badge-blocked">Bloqueado</span>`;
+      }
+
+      let levelSection = '';
+      if (c.reqLevel) {
+        const maxSem = levelToMaxSem[c.reqLevel];
+        const isLevelComplete = st.missingFromLevel.length === 0;
+        levelSection = `
+          <div class="inspector-section">
+            <h3>Exigencia de Nivel Completo</h3>
+            <div class="list-item ${isLevelComplete ? 'ok' : 'missing'}">
+              <span>Nivel ${c.reqLevel} (Sem. 1 al ${maxSem} completos)</span>
+              <strong>${isLevelComplete ? '✓ Cumplido' : `${st.missingFromLevel.length} pendientes`}</strong>
+            </div>
+          </div>
+        `;
+      }
+
+      let blockedExplanation = '';
+      if (!st.isPassed && !st.isConvalidated && !st.isAvailable && !st.isFailed) {
+        let reasons = [];
+        if (st.missingDirect.length > 0) {
+          reasons.push(`Faltan prerrequisitos directos: <strong>${st.missingDirect.map(id => courses.find(x => x.id === id).name).join(', ')}</strong>`);
+        }
+        if (st.missingFromLevel.length > 0) {
+          reasons.push(`Falta completar el Nivel ${c.reqLevel}. Tienes ${st.missingFromLevel.length} ramo(s) sin aprobar entre los semestres 1 y ${levelToMaxSem[c.reqLevel]}.`);
+        }
+
+        blockedExplanation = `
+          <div class="alert-box">
+            <strong style="color:var(--missing-req);">¿Por qué no puedes cursarlo?</strong><br>
+            ${reasons.join('<br><br>')}
+          </div>
+        `;
+      }
+
+      let convalidationBoxHTML = '';
+      if (!st.isPassed && !st.isConvalidated && !st.isAvailable) {
+        convalidationBoxHTML = `
+          <div class="convalidation-box">
+            <p><strong>¿Vienes de cambio de carrera o convalidación?</strong><br>
+            Puedes forzar la aprobación de esta asignatura saltándote los prerrequisitos pendientes.</p>
+            <button class="btn-convalidate" onclick="setStatus('${c.id}', 'convalidated')">★ Convalidar / Forzar Aprobación</button>
+          </div>
+        `;
+      } else if (st.isConvalidated) {
+        convalidationBoxHTML = `
+          <div class="convalidation-box" style="border-style: solid;">
+            <p><strong>Asignatura convalidada:</strong><br>
+            Esta materia fue acreditada por cambio de carrera o convalidación externa.</p>
+            <button class="btn-status btn-reset-course" onclick="setStatus('${c.id}', null)">Quitar Convalidación</button>
+          </div>
+        `;
+      }
+
+      inspectorPanel.innerHTML = `
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:0.75rem; color:var(--text-muted);">${c.code} · Sem. ${c.sem} (Niv. ${semToLevel[c.sem]})</span>
+            ${badgeHTML}
+          </div>
+          <h2 style="font-size:1.1rem; line-height:1.2;">${c.name}</h2>
+          <p style="font-size:0.8rem; color:var(--primary); margin-top:4px;">Créditos: ${c.sct} SCT</p>
+        </div>
+
+        <div class="action-group">
+          <button class="btn-status btn-pass" onclick="setStatus('${c.id}', 'passed')">✓ Aprobar</button>
+          <button class="btn-status btn-fail" onclick="setStatus('${c.id}', 'failed')">✕ Reprobar</button>
+          <button class="btn-status btn-reset-course" onclick="setStatus('${c.id}', null)">Dejar Pendiente</button>
+        </div>
+
+        ${levelSection}
+
+        <div class="inspector-section">
+          <h3>Prerrequisitos directos (${c.reqs.length})</h3>
+          ${c.reqs.length === 0 ? '<p style="font-size:0.75rem; color:var(--text-muted);">Sin prerrequisitos específicos.</p>' : `
+            <div class="item-list">
+              ${c.reqs.map(rid => {
+                const reqCourse = courses.find(i => i.id === rid);
+                const reqState = courseStatusMap[rid];
+                const ok = reqState === 'passed' || reqState === 'convalidated';
+                const label = reqState === 'convalidated' ? '★ Convalidado' : (ok ? '✓ Aprobado' : (reqState === 'failed' ? '✕ Reprobado' : 'Pendiente'));
+                return `
+                  <div class="list-item ${ok ? 'ok' : 'missing'}" onclick="selectCourse('${rid}')">
+                    <span>${reqCourse ? reqCourse.name : rid}</span>
+                    <span style="font-weight:700;">${label}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `}
+        </div>
+
+        ${blockedExplanation}
+
+        ${convalidationBoxHTML}
+
+        <div class="inspector-section">
+          <h3>Asignaturas que abre directamente (${unlocks.length})</h3>
+          ${unlocks.length === 0 ? '<p style="font-size:0.75rem; color:var(--text-muted);">No es prerrequisito directo de otros ramos.</p>' : `
+            <div class="item-list">
+              ${unlocks.map(u => `
+                <div class="list-item" onclick="selectCourse('${u.id}')">
+                  <span>${u.name}</span>
+                  <span style="color:var(--text-muted); font-size:0.7rem;">Sem. ${u.sem}</span>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+
+        <div class="footer-credits">
+          Creado por el Centro de Estudiantes de Ingeniería Comercial 2026
+          <span class="univ">Universidad de Atacama</span>
+        </div>
+      `;
+    }
+
+    function toggleTheme() {
+      const current = document.body.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', next);
+      document.getElementById('themeBtn').innerText = next === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+      localStorage.setItem('malla_theme', next);
+    }
+
+    function resetAll() {
+      if (confirm('¿Seguro que deseas restablecer todos los ramos a pendientes?')) {
+        courseStatusMap = {};
+        localStorage.removeItem('malla_statuses');
+        updateAll();
+      }
+    }
+
+    const savedTheme = localStorage.getItem('malla_theme') || 'dark';
+    document.body.setAttribute('data-theme', savedTheme);
+    document.getElementById('themeBtn').innerText = savedTheme === 'dark' ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+
+    if (localStorage.getItem('malla_sidebar_collapsed') === 'true') {
+      inspectorPanel.classList.add('collapsed');
+      document.getElementById('sidebarToggleBtn').innerText = '⮜ Mostrar Panel';
+    }
+
+    enforceCascade();
+    renderGrid();
+  </script>
+</body>
+</html>
